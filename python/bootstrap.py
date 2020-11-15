@@ -92,8 +92,18 @@ class CreditCard:
 
 
 class Customer(object):
-    def __init__(self, name):
+    def __init__(self, name, email=None):
         self.name = name
+        self.email = email
+
+    def __eq__(self, other):
+        return (
+            self.name == other.name and
+            self.email == other.email
+        )
+
+    def __hash__(self):
+        return hash((self.name, self.email))
 
 
 class Membership:

@@ -1,6 +1,8 @@
 from datetime import datetime
 from bootstrap import Payment, ProductType
+from email_client import EmailClient
 from label_printer import LabelPrinter
+from subscriptions import Subscriptions
 
 
 def pay(order, payment_method):
@@ -10,6 +12,22 @@ def pay(order, payment_method):
 
     if order.has_physical_items:
         LabelPrinter.enqueue(_generate_shipping_label(order))
+
+    for item in order.items:
+        if item.product.type == ProductType.MEMBERSHIP:
+            Subscriptions.activate(order.customer, item.product.name, item.quantity)
+            EmailClient.send(
+                order.customer.email,
+                subject=f'{item.product.name} subscription',
+                body=_generate_email_body(item, order)
+            )
+
+
+def _generate_email_body(item, order):
+    return (
+        f'Hello {order.customer.name}\n'
+        f'You have been subscribed to "{item.product.name}" for {item.quantity} months\n'
+    )
 
 
 def _generate_shipping_label(order):

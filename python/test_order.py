@@ -3,15 +3,21 @@ from unittest import TestCase
 from unittest.mock import patch
 
 import order_service
-from bootstrap import Order, Product, ProductType, Customer, CreditCard, Payment, Invoice
+from bootstrap import Order, Product, ProductType, Customer, CreditCard, Payment, Invoice, Address
+from email_client import EmailClient, Mail
+from label_printer import LabelPrinter
+from subscriptions import Subscriptions
 
 
 class TestOrder(TestCase):
     def setUp(self):
         self.datetime = patch('order_service.datetime').start()
-        self.order = Order(Customer())
+        self.order = Order(Customer('Antonio'))
 
     def tearDown(self):
+        LabelPrinter.reset()
+        EmailClient.reset()
+        Subscriptions.reset()
         patch.stopall()
 
     def test_add_a_single_product(self):
@@ -55,3 +61,35 @@ class TestOrder(TestCase):
         assert self.order.payment.paid_at == datetime(2020, 1, 1)
         assert self.order.payment.amount == 200
         assert self.order.payment.invoice == Invoice(self.order.address, self.order.address)
+
+    def test_pay_order_with_physical_item(self):
+        expected_label = (
+            'Name: Manuela\n'
+            'ZipCode: 46100\n'
+        )
+        credit_card = CreditCard.fetch_by_hashed('01234-4321')
+        order = Order(Customer('Manuela'), Address('46100'))
+        order.add_product(Product('Untitled', ProductType.PHYSICAL, price=20), quantity=10)
+
+        order_service.pay(order, credit_card)
+
+        assert expected_label in LabelPrinter.queue
+
+    def test_pay_order_with_subscription(self):
+        expected_mail = Mail(
+            address='ophelia@gmail.com',
+            subject='24/7 sl terminal show subscription',
+            body=(
+                'Hello Ofelia\n'
+                'You have been subscribed to "24/7 sl terminal show" for 12 months\n'
+            )
+        )
+        customer = Customer('Ofelia', 'ophelia@gmail.com')
+        credit_card = CreditCard.fetch_by_hashed('01234-4321')
+        order = Order(customer, Address('42100'))
+        order.add_product(Product('24/7 sl terminal show', ProductType.MEMBERSHIP, price=20), quantity=12)
+
+        order_service.pay(order, credit_card)
+
+        assert expected_mail in EmailClient.queue
+        assert '24/7 sl terminal show' in Subscriptions.by_customer(customer)
