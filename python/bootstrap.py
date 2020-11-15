@@ -50,6 +50,10 @@ class Order:
     def total_amount(self):
         return sum(item.total for item in self.items)
 
+    @property
+    def has_physical_items(self):
+        return any(item.product.type == ProductType.PHYSICAL for item in self.items)
+
     def close(self, closed_at=time.time()):
         self.closed_at = closed_at
 
@@ -87,9 +91,9 @@ class CreditCard:
         return CreditCard()
 
 
-class Customer:
-    # you can customize this class by yourself
-    pass
+class Customer(object):
+    def __init__(self, name):
+        self.name = name
 
 
 class Membership:
