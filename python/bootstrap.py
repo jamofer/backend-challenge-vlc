@@ -3,12 +3,12 @@ from enum import Enum
 
 
 class Payment:
-    def __init__(self, attributes={}):
-        self.authorization_number = attributes.get('attributes', None)
-        self.amount = attributes.get('amount', None)
-        self.invoice = attributes.get('invoice', None)
-        self.order = attributes.get('order', None)
-        self.payment_method = attributes.get('payment_method', None)
+    def __init__(self, order, payment_method):
+        self.order = order
+        self.payment_method = payment_method
+        self.authorization_number = None
+        self.amount = None
+        self.invoice = None
         self.paid_at = None
 
     def pay(self, paid_at=time.time()):
@@ -35,17 +35,21 @@ class Invoice:
         self.order = attributes.get('order', None)
 
 
+class Address:
+    def __init__(self, zipcode):
+        self.zipcode = zipcode
+
+
 class Order:
-    def __init__(self, customer, attributes={}):
+    def __init__(self, customer, address=Address(zipcode='45678-979')):
         self.customer = customer
+        self.address = address
         self.items = []
-        self.order_item_class = attributes.get('order_item_class', OrderItem)
-        self.address = attributes.get('address', Address(zipcode='45678-979'))
         self.payment = None
         self.closed_at = None
 
     def add_product(self, product, quantity):
-        self.items.append(self.order_item_class(product=product, quantity=quantity))
+        self.items.append(OrderItem(product=product, quantity=quantity))
 
     @property
     def total_amount(self):
@@ -80,11 +84,6 @@ class Product:
         self.name = name
         self.type = type
         self.price = price
-
-
-class Address:
-    def __init__(self, zipcode):
-        self.zipcode = zipcode
 
 
 class CreditCard:
