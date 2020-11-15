@@ -95,10 +95,6 @@ class ProductType(Enum):
 
 class Product:
     # use type to distinguish each kind of product: physical, book, digital, membership, etc.
-    name = None
-    type = None
-    price = None
-
     def __init__(self, name, type, price):
         self.name = name
         self.type = type
@@ -127,21 +123,3 @@ class Customer:
 class Membership:
     # you can customize this class by yourself
     pass
-
-
-# Book Example (build new payments if you need to properly test it)
-foolano = Customer()
-book = Product(name='Awesome book', type='book', price=10.0)
-book_order = Order(foolano)
-book_order.add_product(book, 1)
-
-attributes = dict(
-    order=book_order,
-    payment_method=CreditCard.fetch_by_hashed('43567890-987654367')
-)
-payment_book = Payment(attributes=attributes)
-payment_book.pay()
-print(payment_book.is_paid())  # < true
-print(payment_book.order.items[0].product.type)
-
-# now, how to deal with shipping rules then?
