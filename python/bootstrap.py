@@ -51,8 +51,12 @@ class Order:
         return sum(item.total for item in self.items)
 
     @property
-    def has_physical_items(self):
-        return any(item.product.type == ProductType.PHYSICAL for item in self.items)
+    def phyisical_items(self):
+        return [item for item in self.items if item.product.type == ProductType.PHYSICAL]
+
+    @property
+    def membership_items(self):
+        return [item for item in self.items if item.product.type == ProductType.MEMBERSHIP]
 
     def close(self, closed_at=time.time()):
         self.closed_at = closed_at

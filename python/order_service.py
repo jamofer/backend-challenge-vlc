@@ -10,17 +10,16 @@ def pay(order, payment_method):
     order.payment = payment
     order.close(payment.paid_at)
 
-    if order.has_physical_items:
+    if order.phyisical_items:
         LabelPrinter.enqueue(_generate_shipping_label(order))
 
-    for item in order.items:
-        if item.product.type == ProductType.MEMBERSHIP:
-            Subscriptions.activate(order.customer, item.product.name, item.quantity)
-            EmailClient.send(
-                order.customer.email,
-                subject=f'{item.product.name} subscription',
-                body=_generate_email_body(item, order)
-            )
+    for item in order.membership_items:
+        Subscriptions.activate(order.customer, item.product.name, item.quantity)
+        EmailClient.send(
+            order.customer.email,
+            subject=f'{item.product.name} subscription',
+            body=_generate_email_body(item, order)
+        )
 
 
 def _generate_email_body(item, order):
