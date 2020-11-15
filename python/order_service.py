@@ -15,10 +15,10 @@ def pay(order, payment_method):
     order.close(payment.paid_at)
 
     if order.physical_items:
-        LabelPrinter.enqueue(_generate_shipping_label(order))
+        LabelPrinter.print(_generate_shipping_label(order))
 
     if order.book_items:
-        LabelPrinter.enqueue(_generate_shipping_label(order, tax_exempt=True))
+        LabelPrinter.print(_generate_shipping_label(order, tax_exempt=True))
 
     for item in order.membership_items:
         Subscriptions.activate(order.customer, item.product.name, item.quantity)
@@ -28,13 +28,13 @@ def pay(order, payment_method):
             body=_subscription_mail(order.customer, item)
         )
 
-    for item in order.digital_items:
+    if order.digital_items:
         code = _random_code()
         DiscountCodes.add(order.customer, code, percentage=DIGITAL_PURCHASE_DISCOUNT_PERCENTAGE)
         EmailClient.send(
             order.customer.email,
             subject='Purchase details',
-            body=_purchase_mail(order.customer, item, code)
+            body=_purchase_mail(order.customer, order.digital_items, code)
         )
 
 
@@ -49,10 +49,11 @@ def _subscription_mail(customer, item):
     )
 
 
-def _purchase_mail(customer, item, code):
+def _purchase_mail(customer, items, code):
+    product_names = [f'"{item.product.name}"' for item in items]
     return (
         f'Hello {customer.name}\n'
-        f'You have purchased "{item.product.name}"\n'
+        f'You have purchased {", ".join(product_names)}\n'
         f'Use the following code for a {DIGITAL_PURCHASE_DISCOUNT_PERCENTAGE}% discount in the next order:\n'
         f'{code}\n'
     )

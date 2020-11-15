@@ -130,3 +130,25 @@ class TestOrder(TestCase):
 
         assert expected_mail in EmailClient.queue
         assert 'ABC1234' in DiscountCodes.by_customer(customer)
+
+    def test_pay_order_with_digital_items(self):
+        expected_mail = Mail(
+            address='asd@hotmail.com',
+            subject='Purchase details',
+            body=(
+                'Hello Asd\n'
+                'You have purchased "Need for Acceleration", "Fogata Artica"\n'
+                'Use the following code for a 10% discount in the next order:\n'
+                'ABC1234\n'
+            )
+        )
+        customer = Customer('Asd', 'asd@hotmail.com')
+        credit_card = CreditCard.fetch_by_hashed('01234-4321')
+        order = Order(customer)
+        order.add_product(Product('Need for Acceleration', ProductType.DIGITAL, price=20), quantity=1)
+        order.add_product(Product('Fogata Artica', ProductType.DIGITAL, price=30), quantity=1)
+
+        order_service.pay(order, credit_card)
+
+        assert expected_mail in EmailClient.queue
+        assert 'ABC1234' in DiscountCodes.by_customer(customer)
