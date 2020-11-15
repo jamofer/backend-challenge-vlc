@@ -1,5 +1,6 @@
 from unittest import TestCase
 
+import order_service
 from bootstrap import Customer, Product, Order, CreditCard, Payment, ProductType
 
 
@@ -11,9 +12,9 @@ class TestAcceptance(TestCase):
         book_order = Order(foolano)
         book_order.add_product(book, 1)
 
-        payment_book = Payment(book_order, payment_method=foolanos_credit_card)
-        payment_book.pay()
+        order_service.pay(book_order, payment_method=foolanos_credit_card)
 
-        assert payment_book.is_paid
-        assert payment_book.order.customer == foolano
-        assert payment_book.order.items[0].product == book
+        assert book_order.is_paid
+        assert book_order.customer == foolano
+        assert book_order.items[0].product == book
+        assert book_order.payment.amount == 10.0

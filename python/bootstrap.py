@@ -3,36 +3,27 @@ from enum import Enum
 
 
 class Payment:
-    def __init__(self, order, payment_method):
-        self.order = order
-        self.payment_method = payment_method
-        self.authorization_number = None
-        self.amount = None
-        self.invoice = None
-        self.paid_at = None
-
-    def pay(self, paid_at=time.time()):
-        self.amount = self.order.total_amount
+    def __init__(self, order, payment_method, paid_at):
         self.authorization_number = int(time.time())
-        attributes = dict(
-            billing_address=self.order.address,
-            shipping_address=self.order.address,
-            order=self.order
-        )
-        self.invoice = Invoice(attributes=attributes)
+        self.payment_method = payment_method
+        self.amount = order.total_amount
         self.paid_at = paid_at
-        self.order.close(self.paid_at)
-
-    @property
-    def is_paid(self):
-        return self.paid_at is not None
+        self.invoice = Invoice(
+            billing_address=order.address,
+            shipping_address=order.address,
+        )
 
 
 class Invoice:
-    def __init__(self, attributes={}):
-        self.billing_address = attributes.get('billing_address', None)
-        self.shipping_address = attributes.get('shipping_address', None)
-        self.order = attributes.get('order', None)
+    def __init__(self, billing_address=None, shipping_address=None):
+        self.billing_address = billing_address
+        self.shipping_address = shipping_address
+
+    def __eq__(self, other):
+        return (
+            self.billing_address == other.billing_address and
+            self.shipping_address == other.shipping_address
+        )
 
 
 class Address:
@@ -50,6 +41,10 @@ class Order:
 
     def add_product(self, product, quantity):
         self.items.append(OrderItem(product=product, quantity=quantity))
+
+    @property
+    def is_paid(self):
+        return self.payment is not None
 
     @property
     def total_amount(self):
