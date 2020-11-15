@@ -52,19 +52,22 @@ class Order:
 
     @property
     def physical_items(self):
-        return [item for item in self.items if item.product.type == ProductType.PHYSICAL]
+        return self.items_by_type(ProductType.PHYSICAL)
 
     @property
     def membership_items(self):
-        return [item for item in self.items if item.product.type == ProductType.MEMBERSHIP]
+        return self.items_by_type(ProductType.MEMBERSHIP)
 
     @property
     def book_items(self):
-        return [item for item in self.items if item.product.type == ProductType.BOOK]
+        return self.items_by_type(ProductType.BOOK)
 
     @property
     def digital_items(self):
-        return [item for item in self.items if item.product.type == ProductType.DIGITAL]
+        return self.items_by_type(ProductType.DIGITAL)
+
+    def items_by_type(self, type):
+        return [item for item in self.items if item.product.type == type]
 
     def close(self, closed_at=time.time()):
         self.closed_at = closed_at
