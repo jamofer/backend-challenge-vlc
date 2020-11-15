@@ -29,8 +29,9 @@ class Payment:
         self.paid_at = paid_at
         self.order.close(self.paid_at)
 
+    @property
     def is_paid(self):
-        return self.paid_at != None
+        return self.paid_at is not None
 
 
 class Invoice:
@@ -58,9 +59,9 @@ class Order:
         self.address = attributes.get('address', Address(zipcode='45678-979'))
 
     def add_product(self, product, quantity):
-        for i in range(0, quantity):
-            self.items.append(self.order_item_class(order=self, product=product))
+        self.items.append(self.order_item_class(product=product, quantity=quantity))
 
+    @property
     def total_amount(self):
         total = 0
         for item in self.items:
@@ -75,15 +76,12 @@ class Order:
 
 
 class OrderItem:
-    order = None
-    product = None
-
-    def __init__(self, order, product):
-        self.order = order
+    def __init__(self, product, quantity):
         self.product = product
+        self.quantity = quantity
 
     def total(self):
-        return self.product.price
+        return self.product.price * self.quantity
 
 
 class ProductType(Enum):
