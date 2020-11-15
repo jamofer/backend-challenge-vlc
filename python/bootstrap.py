@@ -51,7 +51,7 @@ class Order:
         return sum(item.total for item in self.items)
 
     @property
-    def phyisical_items(self):
+    def physical_items(self):
         return [item for item in self.items if item.product.type == ProductType.PHYSICAL]
 
     @property
@@ -62,10 +62,12 @@ class Order:
     def book_items(self):
         return [item for item in self.items if item.product.type == ProductType.BOOK]
 
+    @property
+    def digital_items(self):
+        return [item for item in self.items if item.product.type == ProductType.DIGITAL]
+
     def close(self, closed_at=time.time()):
         self.closed_at = closed_at
-
-    # remember: you can create new methods inside those classes to help you create a better design
 
 
 class OrderItem:
@@ -112,8 +114,3 @@ class Customer(object):
 
     def __hash__(self):
         return hash((self.name, self.email))
-
-
-class Membership:
-    # you can customize this class by yourself
-    pass

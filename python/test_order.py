@@ -3,7 +3,8 @@ from unittest import TestCase
 from unittest.mock import patch
 
 import order_service
-from bootstrap import Order, Product, ProductType, Customer, CreditCard, Payment, Invoice, Address
+from bootstrap import Order, Product, ProductType, Customer, CreditCard, Invoice, Address
+from discount_codes import DiscountCodes
 from email_client import EmailClient, Mail
 from label_printer import LabelPrinter
 from subscriptions import Subscriptions
@@ -18,6 +19,7 @@ class TestOrder(TestCase):
         LabelPrinter.reset()
         EmailClient.reset()
         Subscriptions.reset()
+        DiscountCodes.reset()
         patch.stopall()
 
     def test_add_a_single_product(self):
@@ -107,3 +109,24 @@ class TestOrder(TestCase):
         order_service.pay(order, credit_card)
 
         assert expected_label in LabelPrinter.queue
+
+    def test_pay_order_with_digital_item(self):
+        expected_mail = Mail(
+            address='asd@hotmail.com',
+            subject='Purchase details',
+            body=(
+                'Hello Asd\n'
+                'You have purchased "Need for Acceleration"\n'
+                'Use the following code for a 10% discount in the next order:\n'
+                'ABC1234\n'
+            )
+        )
+        customer = Customer('Asd', 'asd@hotmail.com')
+        credit_card = CreditCard.fetch_by_hashed('01234-4321')
+        order = Order(customer)
+        order.add_product(Product('Need for Acceleration', ProductType.DIGITAL, price=20), quantity=1)
+
+        order_service.pay(order, credit_card)
+
+        assert expected_mail in EmailClient.queue
+        assert 'ABC1234' in DiscountCodes.by_customer(customer)

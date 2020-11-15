@@ -2,6 +2,7 @@ from unittest import TestCase
 
 import order_service
 from bootstrap import Customer, Product, Order, CreditCard, ProductType, Address
+from discount_codes import DiscountCodes
 from email_client import Mail, EmailClient
 from label_printer import LabelPrinter
 from subscriptions import Subscriptions
@@ -75,3 +76,29 @@ class TestAcceptance(TestCase):
         assert order.payment.amount == 30.0
         assert expected_mail in EmailClient.queue
         assert 'Netflix' in Subscriptions.by_customer(customer)
+
+    def test_it_orders_a_digital_media_item(self):
+        expected_mail = Mail(
+            address='anthonio@hotmail.com',
+            subject='Purchase details',
+            body=(
+                'Hello Anthonio\n'
+                'You have purchased "Kung Fury"\n'
+                'Use the following code for a 10% discount in the next order:\n'
+                'ABC1234\n'
+            )
+        )
+        customer = Customer('Anthonio', email='anthonio@hotmail.com')
+        credit_card = CreditCard.fetch_by_hashed('43567890-987654367')
+        item = Product(name='Kung Fury', type=ProductType.DIGITAL, price=15.0)
+        order = Order(customer, Address('46100'))
+        order.add_product(item, 2)
+
+        order_service.pay(order, payment_method=credit_card)
+
+        assert order.is_paid
+        assert order.customer == customer
+        assert order.items[0].product == item
+        assert order.payment.amount == 30.0
+        assert expected_mail in EmailClient.queue
+        assert 'ABC1234' in DiscountCodes.by_customer(customer)
