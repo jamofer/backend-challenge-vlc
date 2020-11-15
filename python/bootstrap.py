@@ -3,19 +3,13 @@ from enum import Enum
 
 
 class Payment:
-    authorization_number = None
-    amount = None
-    invoice = None
-    order = None
-    payment_method = None
-    paid_at = None
-
     def __init__(self, attributes={}):
         self.authorization_number = attributes.get('attributes', None)
         self.amount = attributes.get('amount', None)
         self.invoice = attributes.get('invoice', None)
         self.order = attributes.get('order', None)
         self.payment_method = attributes.get('payment_method', None)
+        self.paid_at = None
 
     def pay(self, paid_at=time.time()):
         self.amount = self.order.total_amount
@@ -35,10 +29,6 @@ class Payment:
 
 
 class Invoice:
-    billing_address = None
-    shipping_address = None
-    order = None
-
     def __init__(self, attributes={}):
         self.billing_address = attributes.get('billing_address', None)
         self.shipping_address = attributes.get('shipping_address', None)
@@ -46,28 +36,20 @@ class Invoice:
 
 
 class Order:
-    customer = None
-    items = None
-    payment = None
-    address = None
-    closed_at = None
-
     def __init__(self, customer, attributes={}):
         self.customer = customer
         self.items = []
         self.order_item_class = attributes.get('order_item_class', OrderItem)
         self.address = attributes.get('address', Address(zipcode='45678-979'))
+        self.payment = None
+        self.closed_at = None
 
     def add_product(self, product, quantity):
         self.items.append(self.order_item_class(product=product, quantity=quantity))
 
     @property
     def total_amount(self):
-        total = 0
-        for item in self.items:
-            total += item.total()
-
-        return total
+        return sum(item.total for item in self.items)
 
     def close(self, closed_at=time.time()):
         self.closed_at = closed_at
@@ -80,6 +62,7 @@ class OrderItem:
         self.product = product
         self.quantity = quantity
 
+    @property
     def total(self):
         return self.product.price * self.quantity
 
@@ -100,14 +83,11 @@ class Product:
 
 
 class Address:
-    zipcode = None
-
     def __init__(self, zipcode):
         self.zipcode = zipcode
 
 
 class CreditCard:
-
     @staticmethod
     def fetch_by_hashed(code):
         return CreditCard()
