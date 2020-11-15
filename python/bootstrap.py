@@ -83,7 +83,7 @@ class OrderItem:
         self.product = product
 
     def total(self):
-        return 10
+        return self.product.price
 
 
 class ProductType(Enum):
