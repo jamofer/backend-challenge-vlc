@@ -58,6 +58,10 @@ class Order:
     def membership_items(self):
         return [item for item in self.items if item.product.type == ProductType.MEMBERSHIP]
 
+    @property
+    def book_items(self):
+        return [item for item in self.items if item.product.type == ProductType.BOOK]
+
     def close(self, closed_at=time.time()):
         self.closed_at = closed_at
 

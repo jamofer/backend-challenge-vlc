@@ -1,5 +1,5 @@
 from datetime import datetime
-from bootstrap import Payment, ProductType
+from bootstrap import Payment
 from email_client import EmailClient
 from label_printer import LabelPrinter
 from subscriptions import Subscriptions
@@ -12,6 +12,9 @@ def pay(order, payment_method):
 
     if order.phyisical_items:
         LabelPrinter.enqueue(_generate_shipping_label(order))
+
+    if order.book_items:
+        LabelPrinter.enqueue(_generate_shipping_label(order, tax_exempt=True))
 
     for item in order.membership_items:
         Subscriptions.activate(order.customer, item.product.name, item.quantity)
@@ -29,8 +32,12 @@ def _generate_email_body(item, order):
     )
 
 
-def _generate_shipping_label(order):
-    return (
+def _generate_shipping_label(order, tax_exempt=False):
+    label = (
         f'Name: {order.customer.name}\n'
         f'ZipCode: {order.address.zipcode}\n'
     )
+    if tax_exempt:
+        label += '** Tax exempt **\n'
+
+    return label

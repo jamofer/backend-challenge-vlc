@@ -93,3 +93,17 @@ class TestOrder(TestCase):
 
         assert expected_mail in EmailClient.queue
         assert '24/7 sl terminal show' in Subscriptions.by_customer(customer)
+
+    def test_pay_order_with_book_item(self):
+        expected_label = (
+            'Name: Manuela\n'
+            'ZipCode: 46100\n'
+            '** Tax exempt **\n'
+        )
+        credit_card = CreditCard.fetch_by_hashed('01234-4321')
+        order = Order(Customer('Manuela'), Address('46100'))
+        order.add_product(Product('Untitled', ProductType.BOOK, price=20), quantity=10)
+
+        order_service.pay(order, credit_card)
+
+        assert expected_label in LabelPrinter.queue

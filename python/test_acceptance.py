@@ -14,10 +14,15 @@ class TestAcceptance(TestCase):
         Subscriptions.reset()
 
     def test_it_orders_a_book(self):
+        expected_shipping_label = (
+            'Name: Foolano\n'
+            'ZipCode: 12345\n'
+            '** Tax exempt **\n'
+        )
         foolano = Customer('Foolano')
         foolanos_credit_card = CreditCard.fetch_by_hashed('43567890-987654367')
         book = Product(name='Awesome book', type=ProductType.BOOK, price=10.0)
-        book_order = Order(foolano)
+        book_order = Order(foolano, Address('12345'))
         book_order.add_product(book, 1)
 
         order_service.pay(book_order, payment_method=foolanos_credit_card)
@@ -26,6 +31,7 @@ class TestAcceptance(TestCase):
         assert book_order.customer == foolano
         assert book_order.items[0].product == book
         assert book_order.payment.amount == 10.0
+        assert expected_shipping_label in LabelPrinter.queue
 
     def test_it_orders_a_physical_item(self):
         expected_shipping_label = (
